@@ -71,7 +71,7 @@ const confirm = async (req, res) => {
         return res.status(400).json({ msg: error.message })
     }
     try {
-        userConfirm.confirmado = true;
+        userConfirm.confirm = true;
         userConfirm.token = ''
         await userConfirm.save()
         res.json({ msg: 'Confirmado Correctamente' })
