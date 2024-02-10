@@ -28,21 +28,22 @@ const uploadImagenMiddleware = (req, res, next) => {
     }
 
     try {
-        console.log('Req file:', req.file);
-console.log('File buffer:', req.file.buffer);
+
 
       // Generate a unique filename
       const uniqueFilename = generateId();
 
       // Upload image to Cloudinary directly from buffer
       const result = await cloudinary.uploader.upload(`data:image/png;base64,${req.file.buffer.toString('base64')}`, {
-        folder: 'Productos',
+       
         public_id: uniqueFilename
       });
-      
+
 
       // Add the uploaded image URL to the request object
-      const publicId = result.secure_url.split('/').pop();
+      console.log(result.secure_url.split('/'))
+      const resultArray =result.secure_url.split('/')
+      const publicId = `${resultArray[6]}/${resultArray[7]}`
       req.imagenUrl = publicId;
 
       next();
