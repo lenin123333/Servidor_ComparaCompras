@@ -49,7 +49,7 @@ const uploadImagenMiddleware = (req, res, next) => {
       next();
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Error al subir la imagen a Cloudinary' });
+      return res.status(500).json({ error: 'Error al subir la imagen a Cloudinary' });
     }
   });
 };

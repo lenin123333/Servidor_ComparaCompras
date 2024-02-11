@@ -24,6 +24,7 @@ const getsCategory = async (req,res)=>{
 
 
 const addProduc =async (req,res)=>{
+    
     // Accede a la URL de la imagen desde el objeto de solicitud
     const imagenUrl = req.imagenUrl;
     res.json({ url: imagenUrl });
