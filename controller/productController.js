@@ -1,38 +1,112 @@
 import Category from "../models/Category.js";
+import Products from "../models/Products.js";
+import Store from "../models/Store.js";
 
 
 
-const addCategory = async (req,res)=>{
-    const{name}= req.body;
-    const existCategory = await Category.findOne({name})
+const addCategory = async (req, res) => {
+    const { name } = req.body;
+    const existCategory = await Category.findOne({ name })
 
-    if(!existCategory){
+    if (!existCategory) {
         const category = new Category(req.body)
         await category.save()
-        res.json({"msg":"Categoria Agregada Correctamente"})
-    }else{
+        res.json({ "msg": "Categoria Agregada Correctamente" })
+    } else {
         const error = new Error('La Categoria ya Existe')
         return res.status(404).json({ msg: error.message })
     }
 }
-const getsCategory = async (req,res)=>{
+const getCategorys = async (req, res) => {
     const category = await Category.find({}).select('-__v');
     res.json(category)
 
+
+}
+
+const addStore = async (req, res) => {
+    const { name, lat, long } = req.body;
+    const existStore = await Store.findOne({ name })
+
+    if (existStore) {
+        const error = new Error('La Tienda ya Existe')
+        return res.status(404).json({ msg: error.message })
+    }
+
+    const existStorePosition = await await Store.findOne({ lat, long })
+    if (existStorePosition) {
+        const error = new Error('La Tienda ya Existe')
+        return res.status(404).json({ msg: error.message })
+    }
+
+    const store = new Store(req.body)
+    await store.save()
+    res.json({ "msg": "Tienda Agregada Correctamente" })
+}
+
+
+const getStores = async (req, res) => {
+    const stores = await Store.find({}).select('-__v');
+    res.json(stores)
+
+
+}
+
+
+const addProduc = async (req, res) => {
+
+    const {name}=req.body;
+    const existeProduct = await Products.findOne({name})
+    if (existeProduct) {
+        const error = new Error('El Producto ya Existe')
+        return res.status(404).json({ msg: error.message })
+    }
+    const product = new Products(req.body);
+    try {
+        if(req.file.filename){
+            product.imagen=req.imagenUrl
+        }
+        //Almacenar el registro
+        await product.save();
+        res.json(product);
+    } catch (error) {
+        console.error(error)
+        next();       
+    }
+    // Accede a la URL de la imagen desde el objeto de solicitud
    
 }
 
 
-const addProduc =async (req,res)=>{
-    
-    // Accede a la URL de la imagen desde el objeto de solicitud
-    const imagenUrl = req.imagenUrl;
-    res.json({ url: imagenUrl });
+const getProducts = async(req,res) =>{
+    const product = await Products.find({})
+    res.json(product)
 }
 
+const updateProduc = async (req, res) => {
+    const {_id,prices} =req.body;
+    const existeProduct = await Products.findOne({_id})
+    if(existeProduct){
+        const newPrices = existeProduct.prices.map(pricesState=>pricesState.store == prices.store ? prices : pricesState);
+        existeProduct.prices=newPrices
+        existeProduct.save()
+        
+        res.json(existeProduct)
+    }else{
+        const error = new Error('El Producto No Existe')
+        return res.status(404).json({ msg: error.message })
+    }
+    
 
-export{
+
+}
+
+export {
     addProduc,
     addCategory,
-    getsCategory
+    getCategorys,
+    addStore,
+    getStores,
+    updateProduc,
+    getProducts
 }

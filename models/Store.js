@@ -4,7 +4,7 @@ import { mongoose } from "mongoose";
 
 const storeSchema = mongoose.Schema({
 
-    nameStore:{
+    name:{
         type:String,
         trim:true,
         required:true
@@ -22,5 +22,5 @@ const storeSchema = mongoose.Schema({
 
 })
 
-const Store = mongoose.model('Product',storeSchema)
+const Store = mongoose.model('Store',storeSchema)
 export default Store
