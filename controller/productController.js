@@ -1,3 +1,4 @@
+import { populate } from "dotenv";
 import Category from "../models/Category.js";
 import Products from "../models/Products.js";
 import Store from "../models/Store.js";
@@ -47,6 +48,8 @@ const addStore = async (req, res) => {
 
 const getStores = async (req, res) => {
     const stores = await Store.find({}).select('-__v');
+   
+   
     res.json(stores)
 
 
@@ -79,8 +82,14 @@ const addProduc = async (req, res) => {
 
 
 const getProducts = async(req,res) =>{
-    const product = await Products.find({})
-    res.json(product)
+    const products = await Products.find()
+            .populate({ path: 'category',select:"-__v" })
+            .populate({ path: 'prices', populate: { path: 'store' ,select:"-__v" } })
+            .select("-__v -creator" );
+
+       
+    
+    res.json(products)
 }
 
 const updateProduc = async (req, res) => {
