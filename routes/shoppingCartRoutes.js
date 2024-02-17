@@ -3,7 +3,10 @@ import {
     addProduct,
     getShoopingCart,
     amountProduct,
-    descountProduct
+    descountProduct,
+    saveShoopingCart,
+    showShoopingCart,
+    getShoopingCartById
 } from '../controller/shoppingCartController.js';
 import checkAuth from '../middleware/checkAuth.js';
 const router = express.Router();
@@ -14,6 +17,8 @@ router.post('/',checkAuth,addProduct)
 router.get('/',checkAuth,getShoopingCart)
 router.post('/amount',checkAuth,amountProduct)
 router.post('/descount',checkAuth,descountProduct)
-
+router.post('/save',checkAuth,saveShoopingCart)
+router.post('/show',checkAuth,showShoopingCart)
+router.get('/:id',checkAuth,getShoopingCartById)
 
 export default router

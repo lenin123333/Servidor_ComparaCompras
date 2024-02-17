@@ -91,36 +91,32 @@ const getShoopingCart = async (req, res) => {
 
 
 const descountProduct = async (req, res) => {
-
-}
-
-const amountProduct = async (req, res) => {
-    const existOrder = await ShoppingCart.findOne
+const existOrder = await ShoppingCart.findOne
         ({ creator: req.user._id, active: true });
+    
     if (existOrder) {
-        const { store, product, amount, price } = req.body.cart[0];
+        const { id } = req.body;
 
         // Buscar el producto en el carrito existente
 
         const existingProduct = existOrder.cart.find(item =>
-            item.store.toString() === store.toString() && item.product.toString() === product.toString()
+            item._id.toString() === id
         );
-
+        
         // Filtrar los productos diferentes al actual
         const updatedCart = existOrder.cart.filter(item =>
-            item.store.toString() !== store.toString() || item.product.toString() !== product.toString()
+            item._id.toString() !== id
         );
 
        
         // Si el producto ya existe, actualizar la cantidad
-        existingProduct.amount += 1;
+        existingProduct.amount -= 1;
         updatedCart.push(existingProduct);
         
 
         existOrder.cart = updatedCart;
         await existOrder.save();
-
-        return res.json(existOrder);
+        return res.json({"msg":"Decrementado"});
     }
 
 
@@ -131,12 +127,116 @@ const amountProduct = async (req, res) => {
 }
 
 
+const amountProduct = async (req, res) => {
+    const existOrder = await ShoppingCart.findOne
+        ({ creator: req.user._id, active: true });
+    
+    if (existOrder) {
+        const { id } = req.body;
 
+        // Buscar el producto en el carrito existente
+
+        const existingProduct = existOrder.cart.find(item =>
+            item._id.toString() === id
+        );
+        
+        // Filtrar los productos diferentes al actual
+        const updatedCart = existOrder.cart.filter(item =>
+            item._id.toString() !== id
+        );
+
+       
+        // Si el producto ya existe, actualizar la cantidad
+        existingProduct.amount += 1;
+        updatedCart.push(existingProduct);
+        
+
+        existOrder.cart = updatedCart;
+        await existOrder.save();
+        return res.json({"msg":"Aumentado"});
+    }
+
+
+    const newOrder = new ShoppingCart(req.body)
+    newOrder.creator = req.user._id;
+    newOrder.save();
+    res.json(newOrder)
+}
+
+
+const saveShoopingCart = async (req,res) =>{
+    const existOrder = await ShoppingCart.findOne
+        ({ creator: req.user._id, active: true });
+
+    existOrder.active=false;
+    await existOrder.save();
+    res.json(existOrder)    
+}
+
+const showShoopingCart =  async(req,res) =>{
+
+}
+
+const getShoopingCartById = async(req,res) =>{
+    const {id}= req.params
+    console.log(id)
+    const existOrder = await ShoppingCart.aggregate([
+        {
+            $match: {
+                _id:id,
+                creator: req.user._id,
+                active: false
+                
+            }
+        },
+        {
+            $unwind: "$cart"
+        },
+        {
+            $lookup: {
+                from: "products",
+                localField: "cart.product",
+                foreignField: "_id",
+                as: "productInfo"
+            }
+        },
+        {
+            $lookup: {
+                from: "stores",
+                localField: "cart.store",
+                foreignField: "_id",
+                as: "storeInfo"
+            }
+        },
+        {
+            $group: {
+                _id: "$cart.store",
+                storeName: { $first: "$storeInfo.name" },
+                products: {
+                    $push: {
+                        _id: "$cart._id",
+                        productName: { $first: "$productInfo.name" },
+                        amount: "$cart.amount",
+                        price: "$cart.price"
+                    }
+                },
+                totalAmount: { $sum: "$cart.amount" },
+                totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
+            }
+        }
+    ]);
+
+    res.json(existOrder)
+
+}
 
 
 export {
     addProduct,
     getShoopingCart,
     descountProduct,
-    amountProduct
+    amountProduct,
+    saveShoopingCart,
+    showShoopingCart,
+    getShoopingCartById
 }
