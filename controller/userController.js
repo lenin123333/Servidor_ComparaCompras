@@ -22,6 +22,7 @@ const register = async (req, res) => {
         //Enviar Email de confirmacion
         emailRegister({
             name:user.name,
+            lastName:user.lastName,
             email:user.email,
             token:user.token
         })
@@ -84,17 +85,18 @@ const confirm = async (req, res) => {
 const forgotPassword = async (req, res) => {
     const { email } = req.body
     const user = await User.findOne({ email });
+    console.log(user)
     if (!user) {
         const error = new Error('Usuario no esta registrado')
         return res.status(400).json({ msg: error.message })
     }
-    if(!user.confirmado){
+    if(!user.confirm){
         const error = new Error('Usuario no esta confirmado')
         return res.status(400).json({ msg: error.message })
     }
     try {
-        user.token = generarId();
-        await usuario.save()
+        user.token = generateId();
+        await user.save()
         //enviar email
         emailForgotPassword({
             name:user.name,

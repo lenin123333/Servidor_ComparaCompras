@@ -21,7 +21,7 @@ export const emailRegister=async (datos)=>{
             text: "Comprueba tu cuenta en ComparaCompras",
             html:` <p>Hola: ${name} Comprueba tu cuenta en ComparaCompras</p>
             <p>Tu cuenta ya esta casi lista, solo debes comprobar en el siguiente enlace: </p>
-            <a href="${process.env.FRONTEND_URL}/confirm/${token}">Comprobar cuenta</a> 
+            <a href="${process.env.FRONTEND_URL}/confirmar/${token}">Comprobar cuenta</a> 
 
             <p>Si tu no creaste esta cuenta, puedes ignorar el mensaje</p>
             
@@ -49,7 +49,7 @@ export const emailForgotPassword=async (datos)=>{
           text: "Restablece tu Contraseña",
           html:` <p>Hola: ${name} has solicitado restablecer tu contraseña</p>
           <p>Sigue el siguiente enlace para generar una nueva contraseña: </p>
-          <a href="${process.env.FRONTEND_URL}/forgot-password/${token}">Restableces Contraseña</a> 
+          <a href="${process.env.FRONTEND_URL}/olvide-password/${token}">Restableces Contraseña</a> 
 
           <p>Si tu no solicitaste este email, puedes ignorar el mensaje</p>
           
