@@ -12,7 +12,7 @@ const addCategory = async (req, res) => {
     if (!existCategory) {
         const category = new Category(req.body)
         await category.save()
-        res.json({ "msg": "Categoria Agregada Correctamente" })
+        res.json(category)
     } else {
         const error = new Error('La Categoria ya Existe')
         return res.status(404).json({ msg: error.message })
