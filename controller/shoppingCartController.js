@@ -35,8 +35,25 @@ const addProduct = async (req, res) => {
         // Buscar el producto en el carrito existente
         
         await existOrder.save();
-
-        return res.json(existOrder);
+        const totalAmount= await ShoppingCart.aggregate([
+            {
+                $match: {
+                    creator: req.user._id,
+                    active: true
+                }
+            },
+            {
+                $unwind: "$cart"
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: "$cart.amount" },
+                }
+            }
+]);
+       
+        return res.json(totalAmount);
     }
 
 

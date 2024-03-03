@@ -2,6 +2,8 @@ import { populate } from "dotenv";
 import Category from "../models/Category.js";
 import Products from "../models/Products.js";
 import Store from "../models/Store.js";
+import ShoppingCart from "../models/ShoppingCart.js"
+
 
 
 
@@ -93,9 +95,26 @@ const getProducts = async(req,res) =>{
             .populate({ path: 'prices', populate: { path: 'store' ,select:"-__v" } })
             .select("-__v -creator" );
 
-       
+    const existOrder = await ShoppingCart.aggregate([
+                {
+                    $match: {
+                        creator: req.user._id,
+                        active: true
+                    }
+                },
+                {
+                    $unwind: "$cart"
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalAmount: { $sum: "$cart.amount" },
+                    }
+                }
+    ]);
+               
     
-    res.json(products)
+    res.json([products,existOrder])
 }
 
 const updateProduc = async (req, res) => {
