@@ -41,7 +41,7 @@ const uploadImagenMiddleware = (req, res, next) => {
 
 
       // Add the uploaded image URL to the request object
-      console.log(result.secure_url.split('/'))
+     // console.log(result.secure_url.split('/'))
       const resultArray =result.secure_url.split('/')
       const publicId = `${resultArray[6]}/${resultArray[7]}`
       req.imagenUrl = publicId;

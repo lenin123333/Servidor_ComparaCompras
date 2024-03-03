@@ -42,7 +42,7 @@ const addStore = async (req, res) => {
 
     const store = new Store(req.body)
     await store.save()
-    res.json({ "msg": "Tienda Agregada Correctamente" })
+    res.json(store)
 }
 
 
@@ -66,12 +66,18 @@ const addProduc = async (req, res) => {
     }
     const product = new Products(req.body);
     try {
-        if(req.file.filename){
-            product.imagen=req.imagenUrl
-        }
+      
+        product.imagen=req.imagenUrl
+        product.creator=req.user._id
+       
         //Almacenar el registro
         await product.save();
-        res.json(product);
+        const productNew = await Products.findOne({_id:product._id})
+            .populate({ path: 'category',select:"-__v" })
+            .populate({ path: 'prices', populate: { path: 'store' ,select:"-__v" } })
+            .select("-__v -creator" );
+            console.log(productNew)
+        res.json(productNew);
     } catch (error) {
         console.error(error)
         next();       
