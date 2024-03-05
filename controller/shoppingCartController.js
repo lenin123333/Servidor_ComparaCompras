@@ -184,7 +184,43 @@ const amountProduct = async (req, res) => {
 
         existOrder.cart = updatedCart;
         await existOrder.save();
-        return res.json({ "msg": "Aumentado" });
+
+        const totalCar = await ShoppingCart.aggregate([
+            {
+                $match: {
+                    creator: req.user._id,
+                    active: true
+                }
+            },
+            {
+                $unwind: "$cart"
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "cart.product",
+                    foreignField: "_id",
+                    as: "productInfo"
+                }
+            },
+            {
+                $lookup: {
+                    from: "stores",
+                    localField: "cart.store",
+                    foreignField: "_id",
+                    as: "storeInfo"
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: "$cart.amount" },
+                    totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
+                }
+            }
+        ]);
+        
+        return res.json(totalCar);
     }
 
 
