@@ -66,8 +66,6 @@ const addProduct = async (req, res) => {
 
 
 const getShoopingCart = async (req, res) => {
-
-
     const existOrder = await ShoppingCart.aggregate([
         {
             $match: {
@@ -113,9 +111,14 @@ const getShoopingCart = async (req, res) => {
         }
     ]);
 
+    // Calcular el total general
+    const totalGeneral = existOrder.reduce((acc, store) => {
+        acc.totalProductsCount += store.totalAmount;
+        acc.totalCartPrice += store.totalPrice;
+        return acc;
+    }, { totalProductsCount: 0, totalCartPrice: 0 });
 
-
-    res.json(existOrder)
+    res.json({ existOrder, totalGeneral });
 }
 
 
@@ -268,9 +271,45 @@ const saveShoopingCart = async (req, res) => {
     const existOrder = await ShoppingCart.findOne
         ({ creator: req.user._id, active: true });
 
-    existOrder.active = false;
-    await existOrder.save();
-    res.json(existOrder)
+    if(existOrder)   {
+        existOrder.active = false;
+
+        const ubiStores = await ShoppingCart.aggregate([
+            {
+                $match: {
+                    creator: req.user._id,
+                    active: true
+                }
+            },
+            {
+                $unwind: "$cart"
+            },
+            {
+                $lookup: {
+                    from: "stores",
+                    localField: "cart.store",
+                    foreignField: "_id",
+                    as: "storeInfo"
+                }
+            },
+            {
+                $group: {
+                    _id: "$cart.store",
+                    storeName: { $first: "$storeInfo.name" },
+                    lat: { $first: "$storeInfo.lat" },
+                    long: { $first: "$storeInfo.long" } // Assuming "location" is the field with lat and long
+                     
+                }
+            }
+        ]);
+        
+        // Result will contain an array of objects with storeName and location
+       
+        await existOrder.save();
+        res.json(ubiStores)
+    } 
+    
+    
 }
 
 const showShoopingCart = async (req, res) => {
