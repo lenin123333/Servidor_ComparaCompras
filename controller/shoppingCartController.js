@@ -8,7 +8,7 @@ const addProduct = async (req, res) => {
 
     if (existOrder) {
 
-        
+
         req.body.cart.forEach((item, index) => {
             const { store, product, amount, price } = item;
             const existingProduct = existOrder.cart.find(item =>
@@ -33,9 +33,9 @@ const addProduct = async (req, res) => {
 
 
         // Buscar el producto en el carrito existente
-        
+
         await existOrder.save();
-        const totalAmount= await ShoppingCart.aggregate([
+        const totalAmount = await ShoppingCart.aggregate([
             {
                 $match: {
                     creator: req.user._id,
@@ -51,8 +51,8 @@ const addProduct = async (req, res) => {
                     totalAmount: { $sum: "$cart.amount" },
                 }
             }
-]);
-       
+        ]);
+
         return res.json(totalAmount);
     }
 
@@ -66,55 +66,55 @@ const addProduct = async (req, res) => {
 
 
 const getShoopingCart = async (req, res) => {
-    
-    
-        const existOrder = await ShoppingCart.aggregate([
-            {
-                $match: {
-                    creator: req.user._id,
-                    active: true
-                }
-            },
-            {
-                $unwind: "$cart"
-            },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "cart.product",
-                    foreignField: "_id",
-                    as: "productInfo"
-                }
-            },
-            {
-                $lookup: {
-                    from: "stores",
-                    localField: "cart.store",
-                    foreignField: "_id",
-                    as: "storeInfo"
-                }
-            },
-            {
-                $group: {
-                    _id: "$cart.store",
-                    storeName: { $first: "$storeInfo.name" },
-                    products: {
-                        $push: {
-                            _id: "$cart._id",
-                            productName: { $first: "$productInfo.name" },
-                            amount: "$cart.amount",
-                            price: "$cart.price",
-                            image: { $first: "$productInfo.imagen" },
-                        }
-                    },
-                    totalAmount: { $sum: "$cart.amount" },
-                    totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
-                }
+
+
+    const existOrder = await ShoppingCart.aggregate([
+        {
+            $match: {
+                creator: req.user._id,
+                active: true
             }
-        ]);
-      
-    
-      
+        },
+        {
+            $unwind: "$cart"
+        },
+        {
+            $lookup: {
+                from: "products",
+                localField: "cart.product",
+                foreignField: "_id",
+                as: "productInfo"
+            }
+        },
+        {
+            $lookup: {
+                from: "stores",
+                localField: "cart.store",
+                foreignField: "_id",
+                as: "storeInfo"
+            }
+        },
+        {
+            $group: {
+                _id: "$cart.store",
+                storeName: { $first: "$storeInfo.name" },
+                products: {
+                    $push: {
+                        _id: "$cart._id",
+                        productName: { $first: "$productInfo.name" },
+                        amount: "$cart.amount",
+                        price: "$cart.price",
+                        image: { $first: "$productInfo.imagen" },
+                    }
+                },
+                totalAmount: { $sum: "$cart.amount" },
+                totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
+            }
+        }
+    ]);
+
+
+
     res.json(existOrder)
 }
 
@@ -145,9 +145,42 @@ const descountProduct = async (req, res) => {
 
         existOrder.cart = updatedCart;
         await existOrder.save();
+        const totalCar = await ShoppingCart.aggregate([
+            {
+                $match: {
+                    creator: req.user._id,
+                    active: true
+                }
+            },
+            {
+                $unwind: "$cart"
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "cart.product",
+                    foreignField: "_id",
+                    as: "productInfo"
+                }
+            },
+            {
+                $lookup: {
+                    from: "stores",
+                    localField: "cart.store",
+                    foreignField: "_id",
+                    as: "storeInfo"
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: "$cart.amount" },
+                    totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
+                }
+            }
+        ]);
 
-
-        return res.json({ "msg": "Decrementado" });
+        return res.json(totalCar);
     }
 
 
@@ -219,7 +252,7 @@ const amountProduct = async (req, res) => {
                 }
             }
         ]);
-        
+
         return res.json(totalCar);
     }
 
@@ -242,6 +275,61 @@ const saveShoopingCart = async (req, res) => {
 
 const showShoopingCart = async (req, res) => {
 
+}
+
+const deleteShoopingCartById = async (req, res) => {
+    const existOrder = await ShoppingCart.findOne
+        ({ creator: req.user._id, active: true });
+
+    if (existOrder) {
+
+        console.log(existOrder.cart)
+        const newArreglo = existOrder.cart.filter((item) =>
+            item._id.toString() !== req.body.id.toString()
+        )
+
+
+        // Buscar el producto en el carrito existente
+        existOrder.cart = newArreglo
+
+        await existOrder.save();
+        const totalCar = await ShoppingCart.aggregate([
+            {
+                $match: {
+                    creator: req.user._id,
+                    active: true
+                }
+            },
+            {
+                $unwind: "$cart"
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "cart.product",
+                    foreignField: "_id",
+                    as: "productInfo"
+                }
+            },
+            {
+                $lookup: {
+                    from: "stores",
+                    localField: "cart.store",
+                    foreignField: "_id",
+                    as: "storeInfo"
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: "$cart.amount" },
+                    totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
+                }
+            }
+        ]);
+
+        return res.json(totalCar);
+    }
 }
 
 const getShoopingCartById = async (req, res) => {
@@ -305,5 +393,6 @@ export {
     amountProduct,
     saveShoopingCart,
     showShoopingCart,
-    getShoopingCartById
+    getShoopingCartById,
+    deleteShoopingCartById
 }
