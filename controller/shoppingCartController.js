@@ -54,14 +54,25 @@ const addProduct = async (req, res) => {
         ]);
 
         return res.json(totalAmount);
+    } else {
+
+
+
+
+        const newOrder = new ShoppingCart(req.body)
+
+        newOrder.creator = req.user._id;
+        newOrder.save();
+        let totalAmount=0;
+        console.log(req.body.cart)
+        req.body.cart.forEach((item, index) => {
+            const { store, product, amount, price } = item;
+            totalAmount+=amount
+
+        })
+
+        return res.json([{id:null,totalAmount}]);
     }
-
-
-    const newOrder = new ShoppingCart(req.body)
-
-    newOrder.creator = req.user._id;
-    newOrder.save();
-    res.json(newOrder)
 }
 
 
@@ -271,7 +282,7 @@ const saveShoopingCart = async (req, res) => {
     const existOrder = await ShoppingCart.findOne
         ({ creator: req.user._id, active: true });
 
-    if(existOrder)   {
+    if (existOrder) {
         existOrder.active = false;
 
         const ubiStores = await ShoppingCart.aggregate([
@@ -298,18 +309,18 @@ const saveShoopingCart = async (req, res) => {
                     storeName: { $first: "$storeInfo.name" },
                     lat: { $first: "$storeInfo.lat" },
                     long: { $first: "$storeInfo.long" } // Assuming "location" is the field with lat and long
-                     
+
                 }
             }
         ]);
-        
+
         // Result will contain an array of objects with storeName and location
-       
+
         await existOrder.save();
         res.json(ubiStores)
-    } 
-    
-    
+    }
+
+
 }
 
 const showShoopingCart = async (req, res) => {
