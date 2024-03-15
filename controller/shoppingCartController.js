@@ -1,4 +1,5 @@
 import ShoppingCart from "../models/ShoppingCart.js"
+import mongoose from 'mongoose';
 
 
 
@@ -427,7 +428,7 @@ const getShoopingCartById = async (req, res) => {
     const existOrder = await ShoppingCart.aggregate([
         {
             $match: {
-                _id: mongoose.Types.ObjectId(id),
+                _id: new mongoose.Types.ObjectId(id),
                 creator: req.user._id
             }
         },
