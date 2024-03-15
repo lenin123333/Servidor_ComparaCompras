@@ -323,9 +323,7 @@ const saveShoopingCart = async (req, res) => {
 
 }
 
-const showShoopingCart = async (req, res) => {
 
-}
 
 const deleteShoopingCartById = async (req, res) => {
     const existOrder = await ShoppingCart.findOne
@@ -382,16 +380,55 @@ const deleteShoopingCartById = async (req, res) => {
     }
 }
 
+const showShoopingCart = async (req, res) => {
+
+    const totalCar = await ShoppingCart.aggregate([
+        {
+            $match: {
+                creator: req.user._id,
+                active: false
+            }
+        },
+        {
+            $unwind: "$cart"
+        },
+        {
+            $lookup: {
+                from: "products",
+                localField: "cart.product",
+                foreignField: "_id",
+                as: "productInfo"
+            }
+        },
+        {
+            $lookup: {
+                from: "stores",
+                localField: "cart.store",
+                foreignField: "_id",
+                as: "storeInfo"
+            }
+        },
+        {
+            $group: {
+                _id: "$_id", // Agrupar por el ID del carrito
+                totalAmount: { $sum: "$cart.amount" },
+                totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
+            }
+        }
+    ]);
+    
+    return res.json(totalCar);
+}
+
+
 const getShoopingCartById = async (req, res) => {
     const { id } = req.params
-    console.log(id)
+   
     const existOrder = await ShoppingCart.aggregate([
         {
             $match: {
-                _id: id,
-                creator: req.user._id,
-                active: false
-
+                _id: mongoose.Types.ObjectId(id),
+                creator: req.user._id
             }
         },
         {
@@ -422,7 +459,8 @@ const getShoopingCartById = async (req, res) => {
                         _id: "$cart._id",
                         productName: { $first: "$productInfo.name" },
                         amount: "$cart.amount",
-                        price: "$cart.price"
+                        price: "$cart.price",
+                        image: { $first: "$productInfo.imagen" },
                     }
                 },
                 totalAmount: { $sum: "$cart.amount" },
@@ -430,10 +468,10 @@ const getShoopingCartById = async (req, res) => {
             }
         }
     ]);
-
     res.json(existOrder)
 
 }
+
 
 
 export {
