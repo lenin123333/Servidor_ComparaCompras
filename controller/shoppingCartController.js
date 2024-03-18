@@ -382,43 +382,71 @@ const deleteShoopingCartById = async (req, res) => {
 }
 
 const showShoopingCart = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 10; // Cantidad de resultados por página
 
-    const totalCar = await ShoppingCart.aggregate([
-        {
-            $match: {
-                creator: req.user._id,
-                active: false
-            }
-        },
-        {
-            $unwind: "$cart"
-        },
-        {
-            $lookup: {
-                from: "products",
-                localField: "cart.product",
-                foreignField: "_id",
-                as: "productInfo"
-            }
-        },
-        {
-            $lookup: {
-                from: "stores",
-                localField: "cart.store",
-                foreignField: "_id",
-                as: "storeInfo"
-            }
-        },
-        {
-            $group: {
-                _id: "$_id", // Agrupar por el ID del carrito
-                totalAmount: { $sum: "$cart.amount" },
-                totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
-            }
-        }
-    ]);
-    
-    return res.json(totalCar);
+    try {
+        const [totalCarCount, totalCar] = await Promise.all([
+            ShoppingCart.aggregate([
+                {
+                    $match: {
+                        creator: req.user._id,
+                        active: false
+                    }
+                },
+                {
+                    $count: "total"
+                }
+            ]),
+            ShoppingCart.aggregate([
+                {
+                    $match: {
+                        creator: req.user._id,
+                        active: false
+                    }
+                },
+                {
+                    $unwind: "$cart"
+                },
+                {
+                    $lookup: {
+                        from: "products",
+                        localField: "cart.product",
+                        foreignField: "_id",
+                        as: "productInfo"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "stores",
+                        localField: "cart.store",
+                        foreignField: "_id",
+                        as: "storeInfo"
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$_id", // Agrupar por el ID del carrito
+                        totalAmount: { $sum: "$cart.amount" },
+                        totalPrice: { $sum: { $multiply: ["$cart.amount", "$cart.price"] } }
+                    }
+                },
+                {
+                    $skip: (page - 1) * perPage // Saltar resultados según la página
+                },
+                {
+                    $limit: perPage // Limitar resultados por página
+                }
+            ])
+        ]);
+
+        console.log(totalCar)
+        const totalProducts = totalCarCount.length > 0 ? totalCarCount[0].total : 0;
+        const totalPages = Math.ceil(totalProducts / perPage);
+        return res.json({ totalProducts, totalPages, shoppingCart: totalCar });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 }
 
 

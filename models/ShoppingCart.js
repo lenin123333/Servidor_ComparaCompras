@@ -1,6 +1,5 @@
 import { mongoose } from "mongoose";
 
-
 const shopingCartSchema = mongoose.Schema({
     
     cart:[
@@ -38,5 +37,7 @@ const shopingCartSchema = mongoose.Schema({
 
 });
 
+
 const ShoppingCart = mongoose.model('ShoppingCart', shopingCartSchema);
+
 export default ShoppingCart;
