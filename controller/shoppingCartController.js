@@ -319,11 +319,51 @@ const saveShoopingCart = async (req, res) => {
 
         await existOrder.save();
         res.json(ubiStores)
+    }else{
+       
+
     }
 
 
 }
 
+const saveShoopingCartById = async (req, res) => {
+        const { id } = req.params
+        const ubiStores = await ShoppingCart.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(id),
+                    creator: req.user._id,
+                }
+            },
+            {
+                $unwind: "$cart"
+            },
+            {
+                $lookup: {
+                    from: "stores",
+                    localField: "cart.store",
+                    foreignField: "_id",
+                    as: "storeInfo"
+                }
+            },
+            {
+                $group: {
+                    _id: "$cart.store",
+                    storeName: { $first: "$storeInfo.name" },
+                    lat: { $first: "$storeInfo.lat" },
+                    long: { $first: "$storeInfo.long" } // Assuming "location" is the field with lat and long
+
+                }
+            }
+        ]);
+
+        // Result will contain an array of objects with storeName and location
+        res.json(ubiStores)
+  
+
+
+}
 
 
 const deleteShoopingCartById = async (req, res) => {
@@ -518,5 +558,6 @@ export {
     saveShoopingCart,
     showShoopingCart,
     getShoopingCartById,
-    deleteShoopingCartById
+    deleteShoopingCartById,
+    saveShoopingCartById
 }
