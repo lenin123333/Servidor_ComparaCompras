@@ -452,7 +452,6 @@ const showShoopingCart = async (req, res) => {
 
 const getShoopingCartById = async (req, res) => {
     const { id } = req.params
-   
     const existOrder = await ShoppingCart.aggregate([
         {
             $match: {
@@ -497,7 +496,15 @@ const getShoopingCartById = async (req, res) => {
             }
         }
     ]);
-    res.json(existOrder)
+
+    // Calcular el total general
+    const totalGeneral = existOrder.reduce((acc, store) => {
+        acc.totalProductsCount += store.totalAmount;
+        acc.totalCartPrice += store.totalPrice;
+        return acc;
+    }, { totalProductsCount: 0, totalCartPrice: 0 });
+
+    res.json({ existOrder, totalGeneral });
 
 }
 
